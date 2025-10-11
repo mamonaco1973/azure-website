@@ -49,12 +49,13 @@ resource "azurerm_cdn_frontdoor_origin_group" "fd_group" {
 # FRONT DOOR ORIGIN (Storage Account)
 # ============================================================================================
 # Defines the backend origin for the Front Door endpoint.
-# Strips protocol (https://) and any trailing slash from the static website URL.
+# Removes both "https://" and any trailing slash from the static website URL.
 # --------------------------------------------------------------------------------------------
 locals {
-  storage_origin_host = regex_replace(
-    azurerm_storage_account.sa.primary_web_endpoint,
-    "https://|/$",
+  # Remove "https://" first, then trim trailing "/"
+  storage_origin_host = replace(
+    replace(azurerm_storage_account.sa.primary_web_endpoint, "https://", ""),
+    "/",
     ""
   )
 }
