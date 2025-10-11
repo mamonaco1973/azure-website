@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>Under Construction</title>
+  <style>
+    :root { --fg: #0f172a; --sub: #475569; --bg: #f8fafc; --card: #ffffff; --border: #e2e8f0; }
+    @media (prefers-color-scheme: dark) {
+      :root { --fg: #e2e8f0; --sub: #94a3b8; --bg: #0b1220; --card: #0f172a; --border: #1f2937; }
+    }
+    html,body{height:100%;}
+    body{
+      margin:0; display:grid; place-items:center; background:var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif;
+      color:var(--fg);
+    }
+    .card{
+      box-sizing:border-box; width:min(640px, 92vw);
+      background:var(--card); border:1px solid var(--border);
+      border-radius:16px; padding:32px; text-align:center;
+      box-shadow: 0 10px 25px rgba(0,0,0,.06);
+    }
+    h1{font-size: clamp(1.75rem, 2.5vw + 1rem, 2.5rem); margin:0 0 .5rem;}
+    p{margin:.25rem 0; color:var(--sub);}
+    .emoji{font-size:2.25rem; line-height:1; margin-bottom:.25rem}
+    .bar{height:6px; width:140px; margin:18px auto 0; border-radius:999px; background:linear-gradient(90deg,#f59e0b,#eab308,#facc15);}
+    footer{margin-top:18px; font-size:.875rem; color:var(--sub)}
+  </style>
+</head>
+<body>
+  <main class="card" role="main" aria-label="Site status">
+    <div class="emoji" aria-hidden="true">🚧</div>
+    <h1>Under Construction</h1>
+    <p>We’re building something new here. Check back soon.</p>
+    <div class="bar" aria-hidden="true"></div>
+    <footer>© <span id="y"></span> Your Company</footer>
+  </main>
+  <script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+</body>
+</html>
