@@ -1,62 +1,104 @@
 #!/bin/bash
-#================================================================================
+
+# ============================================================================================
 # Script: check_env.sh
 # Purpose:
-#   - Validate that all required CLI tools are available in PATH
-#   - Verify AWS CLI connectivity and authentication
-#   - Abort early if prerequisites are not met
-#================================================================================
+#   - Validate that required commands and environment variables exist
+#   - Confirm Azure CLI login using a Service Principal
+# ============================================================================================
 
-#--------------------------------------------------------------------------------
-# 0. Strict Error Handling
-#--------------------------------------------------------------------------------
-set -euo pipefail
-IFS=$'\n\t'
+# ============================================================================================
+# STEP 0: VALIDATE REQUIRED COMMANDS
+# ============================================================================================
 
-#--------------------------------------------------------------------------------
-# 1. Validate Required Commands
-#--------------------------------------------------------------------------------
-echo "NOTE: Validating that required commands are found in PATH..."
+echo "NOTE: Validating that required commands are found in your PATH."
 
-# List of required command-line tools
-commands=("aws" "terraform" "jq")
+# Define required CLI tools
+commands=("az" "terraform" "jq")
 
-# Flag to track whether all commands are present
+# Flag to track validation status
 all_found=true
 
-# Loop through each required command and verify availability
+# --------------------------------------------------------------------------------------------
+# Iterate through each command and confirm it exists in the PATH
+# --------------------------------------------------------------------------------------------
 for cmd in "${commands[@]}"; do
-    if ! command -v "$cmd" &> /dev/null; then
-        echo "ERROR: $cmd is not found in the current PATH."
-        all_found=false
-    else
-        echo "NOTE: $cmd is found in the current PATH."
-    fi
+  if ! command -v "$cmd" &> /dev/null; then
+    echo "ERROR: $cmd is not found in the current PATH."
+    all_found=false
+  else
+    echo "NOTE: $cmd is found in the current PATH."
+  fi
 done
 
-# Exit if any command was missing
-if [ "$all_found" = false ]; then
-    echo "ERROR: One or more required commands are missing."
-    exit 1
+# --------------------------------------------------------------------------------------------
+# Exit if any required command is missing
+# --------------------------------------------------------------------------------------------
+if [ "$all_found" = true ]; then
+  echo "NOTE: All required commands are available."
+else
+  echo "ERROR: One or more required commands are missing."
+  exit 1
 fi
 
-echo "NOTE: All required commands are available."
+# ============================================================================================
+# STEP 1: VALIDATE REQUIRED ENVIRONMENT VARIABLES
+# ============================================================================================
 
-#--------------------------------------------------------------------------------
-# 2. Validate AWS CLI Connectivity
-#--------------------------------------------------------------------------------
-echo "NOTE: Checking AWS CLI connection..."
+echo "NOTE: Validating that required environment variables are set."
 
-# Attempt to retrieve AWS account identity to confirm credentials are valid
-if ! aws sts get-caller-identity --query "Account" --output text &> /dev/null; then
-    echo "ERROR: Failed to connect to AWS. Please check your credentials and environment."
-    exit 1
+# List of required Azure environment variables
+required_vars=(
+  "ARM_CLIENT_ID"
+  "ARM_CLIENT_SECRET"
+  "ARM_SUBSCRIPTION_ID"
+  "ARM_TENANT_ID"
+)
+
+# Flag to track validation status
+all_set=true
+
+# --------------------------------------------------------------------------------------------
+# Loop through each variable and confirm it is set and non-empty
+# --------------------------------------------------------------------------------------------
+for var in "${required_vars[@]}"; do
+  if [ -z "${!var}" ]; then
+    echo "ERROR: $var is not set or is empty."
+    all_set=false
+  else
+    echo "NOTE: $var is set."
+  fi
+done
+
+# --------------------------------------------------------------------------------------------
+# Exit if any required variable is missing
+# --------------------------------------------------------------------------------------------
+if [ "$all_set" = true ]; then
+  echo "NOTE: All required environment variables are set."
+else
+  echo "ERROR: One or more environment variables are missing."
+  exit 1
 fi
 
-echo "NOTE: Successfully authenticated with AWS."
+# ============================================================================================
+# STEP 2: VALIDATE AZURE LOGIN (SERVICE PRINCIPAL)
+# ============================================================================================
 
-#--------------------------------------------------------------------------------
-# 3. Validation Complete
-#--------------------------------------------------------------------------------
-echo "NOTE: Environment validation successful."
-#================================================================================
+echo "NOTE: Logging in to Azure using Service Principal..."
+
+az login \
+  --service-principal \
+  --username "$ARM_CLIENT_ID" \
+  --password "$ARM_CLIENT_SECRET" \
+  --tenant "$ARM_TENANT_ID" \
+  > /dev/null 2>&1
+
+# --------------------------------------------------------------------------------------------
+# Check return code of Azure login and report status
+# --------------------------------------------------------------------------------------------
+if [ $? -ne 0 ]; then
+  echo "ERROR: Azure login failed. Verify credentials and environment variables."
+  exit 1
+else
+  echo "NOTE: Successfully logged into Azure."
+fi
