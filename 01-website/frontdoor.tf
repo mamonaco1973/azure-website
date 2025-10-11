@@ -49,24 +49,30 @@ resource "azurerm_cdn_frontdoor_origin_group" "fd_group" {
 # FRONT DOOR ORIGIN (Storage Account)
 # ============================================================================================
 # Defines the backend origin for the Front Door endpoint.
+# Strips protocol (https://) and any trailing slash from the static website URL.
+# --------------------------------------------------------------------------------------------
+locals {
+  storage_origin_host = regex_replace(
+    azurerm_storage_account.sa.primary_web_endpoint,
+    "https://|/$",
+    ""
+  )
+}
+
+# ============================================================================================
+# FRONT DOOR ORIGIN (Storage Account)
+# ============================================================================================
+# Defines the backend origin for the Front Door endpoint.
 # The origin uses the Azure Storage static website endpoint.
 # --------------------------------------------------------------------------------------------
 resource "azurerm_cdn_frontdoor_origin" "fd_origin" {
   name                          = "mcs-storage-origin"
   cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.fd_group.id
   enabled                       = true
-  host_name                     = replace(
-                                    azurerm_storage_account.sa.primary_web_endpoint,
-                                    "https://",
-                                    ""
-                                  )
+  host_name                     = local.storage_origin_host
+  origin_host_header            = local.storage_origin_host
   http_port                     = 80
   https_port                    = 443
-  origin_host_header            = replace(
-                                    azurerm_storage_account.sa.primary_web_endpoint,
-                                    "https://",
-                                    ""
-                                  )
   priority                      = 1
   weight                        = 1000
   certificate_name_check_enabled = true
