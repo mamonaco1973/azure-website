@@ -19,10 +19,11 @@ while true; do
   STATUS=$(curl -k -s -o /dev/null -w "%{http_code}" "$URL")
 
   if [ "$STATUS" -eq 200 ]; then
-    echo "NOTE: URL is reachable: $URL"
+    echo "NOTE: URL is now reachable: $URL"
     break
   else
-    echo "WARNING: Still waiting... (Status: $STATUS)"
+    echo "WARNING: $URL not available yet... (Status: $STATUS)"
+    echo "WARNING: Waiting 1 minute before retrying..."
     sleep 60
   fi
 done
