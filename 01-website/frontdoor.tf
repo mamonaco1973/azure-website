@@ -108,7 +108,7 @@ resource "azurerm_cdn_frontdoor_custom_domain" "fd_custom_domain_root" {
   name                     = "mcs-root-domain"
   cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.fd_profile.id
   host_name                = var.domain_name
-  dns_zone_id              = azurerm_dns_zone.existing_zone.id
+  dns_zone_id              = data.azurerm_dns_zone.existing_zone.id
 
   # ----------------------------------------------------------------------------------------------
   # TLS block is now required in the azurerm_cdn_frontdoor_custom_domain resource.
