@@ -49,20 +49,6 @@ data "azurerm_dns_zone" "existing_zone" {
   resource_group_name = var.dns_resource_group
 }
 
-# ============================================================================================
-# VARIABLE: Resource Group Name
-# ============================================================================================
-# Specifies the name of the Azure resource group that we will provision the 
-# website infrastructure into. This allows Terraform to create and manage
-# resources within the specified resource group.
-# --------------------------------------------------------------------------------------------  
-
-variable "web_resource_group" {
-  description = "Name of the Azure resource group containing the web resources"
-  type        = string
-  default     = "simple-website-rg"  
-}
-
 variable "web_location" {
   description = "Azure region where the web resources will be provisioned"
   type        = string

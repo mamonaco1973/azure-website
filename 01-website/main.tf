@@ -42,15 +42,14 @@ data "azurerm_subscription" "primary" {}
 # --------------------------------------------------------------------------------------------
 data "azurerm_client_config" "current" {}
 
-# ============================================================================================
-# RESOURCE GROUP - PRIMARY CONTAINER
-# ============================================================================================
-
 # --------------------------------------------------------------------------------------------
-# Defines the main resource group that will host all website infrastructure.
-# The name must be unique within the Azure subscription.
+# RESOURCE GROUP: Website Infrastructure
+# --------------------------------------------------------------------------------------------
+# This resource group name is dynamically derived from the registered domain name (var.domain).
+# Dots are removed and the name is converted to lowercase to ensure it meets Azure naming rules.
+# Example: "mikes-cloud-solutions.com" → "mikes-cloud-solutions-rg"
 # --------------------------------------------------------------------------------------------
 resource "azurerm_resource_group" "website_rg" {
-  name     = var.web_resource_group
+  name     = "${replace(lower(var.domain_name), ".", "-")}-website-rg"
   location = var.web_location
 }
