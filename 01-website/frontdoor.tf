@@ -106,6 +106,12 @@ resource "azurerm_cdn_frontdoor_route" "fd_route" {
     azurerm_cdn_frontdoor_custom_domain.fd_custom_domain_root.id,
     azurerm_cdn_frontdoor_custom_domain.fd_custom_domain_www.id
   ]
+
+  depends_on = [
+    azurerm_cdn_frontdoor_custom_domain.fd_custom_domain_root,
+    azurerm_cdn_frontdoor_custom_domain.fd_custom_domain_www
+  ]
+
 }
 
 # ================================================================================================
