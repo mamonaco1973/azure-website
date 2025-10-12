@@ -4,7 +4,7 @@
 # ================================================================================================
 
 cd ./01-website
-DOMAIN=$(terraform console <<< "var.domain_name")
+DOMAIN=$(terraform console <<< "var.domain_name" | tr -d '"')
 cd ..
 URL="https://www.${DOMAIN}"
 
