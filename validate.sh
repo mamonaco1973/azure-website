@@ -3,7 +3,7 @@
 # Wait for HTTP 200 from website (ignores SSL errors)
 # ================================================================================================
 
-cd ../01-website
+cd ./01-website
 DOMAIN=$(terraform console <<< "var.domain_name")
 cd ..
 URL="https://www.${DOMAIN}"
