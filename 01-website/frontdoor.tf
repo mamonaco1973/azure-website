@@ -102,7 +102,7 @@ resource "azurerm_cdn_frontdoor_route" "fd_route" {
 }
 
 # ================================================================================================
-# FRONT DOOR CUSTOM DOMAIN - ROOT (mikes-cloud-solutions.net)
+# FRONT DOOR CUSTOM DOMAIN - ROOT (mikes-cloud-solutions.org)
 # ================================================================================================
 resource "azurerm_cdn_frontdoor_custom_domain" "fd_custom_domain_root" {
   name                     = "mcs-root-domain"
@@ -116,5 +116,19 @@ resource "azurerm_cdn_frontdoor_custom_domain" "fd_custom_domain_root" {
   # ----------------------------------------------------------------------------------------------
   tls {
     certificate_type    = "ManagedCertificate"
+  }
+}
+
+# ================================================================================================
+# FRONT DOOR CUSTOM DOMAIN - WWW (www.mikes-cloud-solutions.org)
+# ================================================================================================
+resource "azurerm_cdn_frontdoor_custom_domain" "fd_custom_domain_www" {
+  name                     = "mcs-www-domain"
+  cdn_frontdoor_profile_id = azurerm_cdn_frontdoor_profile.fd_profile.id
+  host_name                = "www.${var.domain_name}"
+  dns_zone_id              = data.azurerm_dns_zone.existing_zone.id
+
+  tls {
+    certificate_type = "ManagedCertificate"
   }
 }
