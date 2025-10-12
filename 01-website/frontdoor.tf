@@ -172,3 +172,33 @@ resource "azurerm_dns_txt_record" "afd_validation_www" {
   ]
 }
 
+# ================================================================================================
+# DATA SOURCE - FETCH VALIDATION TOKEN FOR FRONT DOOR CUSTOM DOMAIN (ROOT)
+# ================================================================================================
+data "azapi_resource" "fd_custom_domain_root_raw" {
+  type      = "Microsoft.Cdn/profiles/customDomains@2023-05-01"
+  parent_id = azurerm_cdn_frontdoor_profile.fd_profile.id
+  name      = azurerm_cdn_frontdoor_custom_domain.fd_custom_domain_root.name
+}
+
+# ================================================================================================
+# DNS TXT RECORD - AUTOMATIC FRONT DOOR VALIDATION (ROOT)
+# ================================================================================================
+# Azure Front Door requires a TXT record (_dnsauth) to prove ownership of the root domain
+# before it can issue the Managed Certificate for HTTPS.
+# -----------------------------------------------------------------------------------------------
+resource "azurerm_dns_txt_record" "afd_validation_root" {
+  name                = "_dnsauth" # No ".www" since it's for the apex/root
+  zone_name           = data.azurerm_dns_zone.existing_zone.name
+  resource_group_name = data.azurerm_dns_zone.existing_zone.resource_group_name
+  ttl                 = 300
+
+  record {
+    value = data.azapi_resource.fd_custom_domain_root_raw.output.properties.validationProperties.validationToken
+  }
+
+  depends_on = [
+    azurerm_cdn_frontdoor_custom_domain.fd_custom_domain_root
+  ]
+}
+
