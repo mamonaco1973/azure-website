@@ -80,25 +80,32 @@ resource "azurerm_cdn_frontdoor_origin" "fd_origin" {
 }
 
 # ============================================================================================
-# FRONT DOOR ROUTE - MAP TRAFFIC TO STORAGE
+# FRONT DOOR ROUTE - MAP TRAFFIC TO STORAGE + BIND CUSTOM DOMAINS
 # ============================================================================================
-# Binds the endpoint to the origin group and specific origin(s).
-# --------------------------------------------------------------------------------------------
 resource "azurerm_cdn_frontdoor_route" "fd_route" {
   name                          = "mcs-route"
   cdn_frontdoor_endpoint_id     = azurerm_cdn_frontdoor_endpoint.fd_endpoint.id
   cdn_frontdoor_origin_group_id = azurerm_cdn_frontdoor_origin_group.fd_group.id
 
-  # At least one origin ID is required (not just the group).
+  # At least one origin ID is required (not just the group)
   cdn_frontdoor_origin_ids = [
     azurerm_cdn_frontdoor_origin.fd_origin.id
   ]
 
-  patterns_to_match      = ["/*"]
-  https_redirect_enabled = true
-  supported_protocols    = ["Http", "Https"]
-  link_to_default_domain = true
-  enabled                = true
+  # Match all paths and force HTTPS
+  patterns_to_match             = ["/*"]
+  https_redirect_enabled        = true
+  supported_protocols           = ["Http", "Https"]
+  link_to_default_domain        = false   # Disable *.azurefd.net
+  enabled                       = true
+
+  # ------------------------------------------------------------------------------------------
+  # Bind the custom domains (root + www) to this route
+  # ------------------------------------------------------------------------------------------
+  cdn_frontdoor_custom_domain_ids = [
+    azurerm_cdn_frontdoor_custom_domain.fd_custom_domain_root.id,
+    azurerm_cdn_frontdoor_custom_domain.fd_custom_domain_www.id
+  ]
 }
 
 # ================================================================================================
