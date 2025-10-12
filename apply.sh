@@ -43,3 +43,15 @@ cd ..
 
 echo "NOTE: Website provisioning complete."
 #================================================================================
+
+#az afd custom-domain show \
+#  --profile-name mcs-fd-profile \
+#  --resource-group mikes-solutions-org \
+#  --custom-domain-name mcs-root-domain \
+#  --query "tls"
+
+#az afd custom-domain show \
+#  --profile-name mcs-fd-profile \
+#  --resource-group mikes-solutions-org \
+#  --custom-domain-name mcs-www-domain \
+#  --query "tls"

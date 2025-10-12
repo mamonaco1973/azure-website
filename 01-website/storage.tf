@@ -38,8 +38,8 @@ resource "random_string" "suffix" {
 # --------------------------------------------------------------------------------------------
 resource "azurerm_storage_account" "sa" {
   name                     = local.storage_name
-  resource_group_name      = data.azurerm_resource_group.website_rg.name
-  location                 = data.azurerm_resource_group.website_rg.location
+  resource_group_name      = azurerm_resource_group.website_rg.name
+  location                 = azurerm_resource_group.website_rg.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
 }
