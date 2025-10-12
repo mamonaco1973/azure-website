@@ -1,49 +1,50 @@
-## Simple Website in AWS with Terraform & CloudFront
+## Simple Website in Azure with Terraform & Front Door
 
-This project automates the deployment of a fully secure, production-ready **static website on AWS**, leveraging **Terraform** for infrastructure-as-code and **CloudFront** for global HTTPS delivery. The site’s content is hosted in an **Amazon S3 bucket**, served through **CloudFront** with an **ACM-issued SSL certificate**, ensuring fast and secure access from anywhere in the world.
+This project automates the deployment of a fully secure, production-ready **static website on Microsoft Azure**, leveraging **Terraform** for infrastructure-as-code and **Azure Front Door** for global HTTPS delivery. The site’s content is hosted in an **Azure Storage Account (Static Website)** and delivered worldwide through **Front Door**, using an **Azure-managed TLS certificate** to ensure fast and secure access from any location.
 
-The included Bash scripts (`apply.sh`, `check_env.sh`, and `destroy.sh`) streamline the full lifecycle — from environment validation and provisioning to clean teardown — making this an ideal foundation for static website hosting, personal portfolios, or documentation portals.
+The included Bash scripts (`apply.sh`, `check_env.sh`, and `destroy.sh`) streamline the complete lifecycle — from environment validation and provisioning to clean teardown — making this an ideal foundation for hosting static websites, documentation portals, or lightweight landing pages in Azure.
 
 ![website](website.png)
 
-**Note:** The only manual step in this process is **domain registration**. This project assumes you register your domain manually in the AWS Management Console (via Route 53). Once the domain is created and the hosted zone exists, Terraform takes over — automating the rest of the deployment, including S3 storage, CloudFront distribution, and ACM certificate provisioning.   In the accompanying video tutorial, we walk through these manual domain registration steps in detail before moving into the Terraform automation.
+**Note:** The only manual step in this process is **domain registration**. This project assumes that you register your domain manually in the **Azure Portal** (via **Azure DNS**). Once the domain and DNS zone are created, Terraform takes over — automating the remainder of the deployment, including static website storage, Front Door configuration, and TLS certificate provisioning. In the accompanying video tutorial, we walk through these manual domain registration steps in the Azure Portal before transitioning into the Terraform automation.
+
 
 ## Key Features
 
-- **Manual Domain Setup**: Domain registration is handled in the AWS console; all other steps are fully automated through Terraform and scripts.  
-- **Infrastructure as Code (IaC)**: All AWS resources are defined declaratively in Terraform for reproducibility and version control.  
-- **HTTPS Everywhere**: Automatically provisions an SSL certificate via AWS Certificate Manager (ACM) and enforces HTTPS through CloudFront.  
-- **Secure Origin Access**: Uses CloudFront Origin Access Control (OAC) to restrict direct S3 access, protecting the site from public exposure.  
-- **Automated Lifecycle**: Shell scripts manage build, validation, and teardown, simplifying infrastructure operations.  
+- **Manual Domain Setup**: Domain registration is handled in the Azure Portal using Azure DNS; all subsequent steps are fully automated through Terraform and scripts.  
+- **Infrastructure as Code (IaC)**: All Azure resources (Storage Account, Front Door, DNS records, etc.) are defined declaratively in Terraform for consistency and version control.  
+- **HTTPS Everywhere**: Automatically provisions and binds an Azure-managed TLS certificate through Front Door, ensuring secure access over HTTPS.  
+- **Secure Origin Access**: Uses **Front Door Origin Groups** and **Private Endpoints (optional)** to protect the Storage Account from direct public access, routing all traffic through Front Door.  
+- **Automated Lifecycle**: Companion shell scripts manage provisioning, validation, and destruction, simplifying deployment and teardown workflows.  
+ 
 
 ## Prerequisites
 
-* [A Registered Domain](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/domain-register.html)
-* [An AWS Account](https://aws.amazon.com/console/)
-* [Install AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) 
+* [A Registered Domain](https://learn.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain)
+* [An Azure Account](https://portal.azure.com/)
+* [Install AZ CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 
 * [Install Latest Terraform](https://developer.hashicorp.com/terraform/install)
 
-If this is your first time watching our content, we recommend starting with this video: [AWS + Terraform: Easy Setup](https://youtu.be/BCMQo0CB9wk). It provides a step-by-step guide to properly configure Terraform, Packer, and the AWS CLI.
+If this is your first time watching our content, we recommend starting with this video: [Azure + Terraform: Easy Setup](https://www.youtube.com/watch?v=wwi3kVgYNOk). It provides a step-by-step guide to properly configure Terraform, Packer, and the AZ CLI.
 
 ## Deployment Flow
 
 ```mermaid
 flowchart LR
-    A[Register Domain] --> B[Run Terraform Apply]
-    B --> C[Create S3 Bucket + Upload index.html]
-    C --> D[Provision ACM Certificate for HTTPS]
-    D --> E[Deploy CloudFront Distribution]
-    E --> F[Verify Website via CloudFront URL]
+    A[Register Domain in Azure DNS] --> B[Run Terraform Apply]
+    B --> C[Create Storage Account + Enable Static Website]
+    C --> D[Provision Front Door Profile + Custom Domains]
+    D --> E[Enable Azure-Managed TLS Certificate for HTTPS]
+    E --> F[Verify Website via Front Door Endpoint]
 ```
 
-*Figure 1: End-to-end build process for the simple AWS website.*
-
+*Figure 1: End-to-end build process for the simple Azure website.*
 
 ## Download this Repository
 
 ```bash
-git clone https://github.com/mamonaco1973/aws-website.git
-cd aws-website
+git clone https://github.com/mamonaco1973/azure-website.git
+cd azure-website
 ```
 
 ## Build the Code
@@ -51,7 +52,7 @@ cd aws-website
 Run [check_env](check_env.sh) then run [apply](apply.sh).
 
 ```bash
-~/aws-website$ ./apply.sh
+~/azure-website$ ./apply.sh
 NOTE: Validating that required commands are found in your PATH.
 NOTE: aws is found in the current PATH.
 NOTE: terraform is found in the current PATH.
@@ -78,30 +79,33 @@ Terraform has been successfully initialized!
 
 ## Build Results
 
-After a successful run of `apply.sh`, Terraform provisions a complete static website infrastructure on AWS. The following resources are created and configured automatically:
+After a successful run of `apply.sh`, Terraform provisions a complete static website infrastructure on Azure. The following resources are created and configured automatically:
 
 | Component | Description |
 |------------|--------------|
-| **S3 Bucket** | Stores all website content (e.g., `index.html`). Configured for static website hosting with public access disabled and CloudFront as the only allowed origin. |
-| **ACM Certificate** | Validates domain ownership and secures the CloudFront distribution with SSL/TLS encryption. The certificate is provisioned in the **us-east-1** region, as required by CloudFront. |
-| **CloudFront Distribution** | Delivers website content globally over HTTPS. Uses the S3 bucket as its origin and automatically redirects all HTTP requests to HTTPS. |
-| **Route 53 Hosted Zone** | Contains DNS records associated with the manually registered domain (created in the AWS Console). CloudFront’s distribution URL will be aliased to this hosted zone |
-|
+| **Storage Account (Static Website)** | Hosts all website content (e.g., `index.html`). Static website hosting is enabled on the `$web` container, with direct public access disabled. |
+| **Azure Front Door Profile** | Provides global HTTPS delivery and intelligent routing. It uses the Storage Account as the backend origin and automatically redirects all HTTP traffic to HTTPS. |
+| **Azure-Managed TLS Certificate** | Secures the Front Door custom domains with SSL/TLS encryption. Certificates are automatically issued and renewed by Azure. |
+| **Azure DNS Zone** | Hosts DNS records for the manually registered domain (created in the Azure Portal). Terraform creates the necessary A and TXT records for domain validation and routing. |
 
-Once the build completes, Terraform outputs the CloudFront distribution URL — for example:
+Once the build completes, you can run the provided **`validate.sh`** script to confirm that the website is online and responding with an HTTP 200 status code:
 
-```
-Outputs:
-
-website_url = "https://mikes-cloud-solutions.com"
+```bash
+./validate.sh
 ```
 
-You can visit this URL to confirm successful deployment. The default `index.html` displays an **“Under Construction”** page, which can later be replaced by your production site content.
+When the script reports `NOTE: URL is reachable`, your website is live and secured over HTTPS.  
+The default `index.html` displays an **“Under Construction”** page, which can later be replaced with your production site content.
 
----
 
 **Teardown:**  
-To remove all resources and avoid unnecessary costs, run:
+
+Before running the `destroy.sh` script, ensure that your domain is **not locked** against DNS record deletions.  
+By default, newly registered domains in Azure have a **delete lock** applied to prevent accidental removal of DNS entries.  
+
+You can remove this lock from the **Azure Portal** by navigating to your **DNS zone**, selecting the **Locks** blade, and deleting any existing **Delete** locks before proceeding.
+
+To remove all resources run:
 
 ```bash
 ./destroy.sh
