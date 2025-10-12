@@ -7,7 +7,7 @@ resource "azurerm_dns_a_record" "root" {
   zone_name           = data.azurerm_dns_zone.existing_zone.name
   resource_group_name = var.dns_resource_group
   ttl                 = 300
-  target_resource_id  = azurerm_cdn_frontdoor_endpoint.site.id
+  target_resource_id  = azurerm_cdn_frontdoor_endpoint.fd_endpoint.id
 }
 
 # ================================================================================================
@@ -18,5 +18,5 @@ resource "azurerm_dns_cname_record" "www" {
   zone_name           = data.azurerm_dns_zone.existing_zone.name
   resource_group_name = var.dns_resource_group
   ttl                 = 300
-  record              = azurerm_cdn_frontdoor_endpoint.site.host_name
+  record              = azurerm_cdn_frontdoor_endpoint.fd_endpoint.host_name
 }
