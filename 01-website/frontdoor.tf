@@ -164,10 +164,11 @@ resource "azurerm_dns_txt_record" "afd_validation_www" {
   ttl                 = 300
 
   record {
-    value = jsondecode(data.azapi_resource.fd_custom_domain_www_raw.output).properties.validationProperties.validationToken
+    value = data.azapi_resource.fd_custom_domain_www_raw.output.properties.validationProperties.validationToken
   }
 
   depends_on = [
     azurerm_cdn_frontdoor_custom_domain.fd_custom_domain_www
   ]
 }
+
