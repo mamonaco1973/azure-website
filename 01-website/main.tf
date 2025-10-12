@@ -33,7 +33,6 @@ data "azurerm_client_config" "current" {}
 # Defines the main resource group that will host all website infrastructure.
 # The name must be unique within the Azure subscription.
 # --------------------------------------------------------------------------------------------
-resource "azurerm_resource_group" "website_rg" {
-  name     = "simple-website-rg"  # Logical container for Azure resources
-  location = "Central US"         # Choose region closest to users or workloads
+data "azurerm_resource_group" "website_rg" {
+  name = var.dns_resource_group
 }

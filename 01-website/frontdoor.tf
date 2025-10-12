@@ -3,7 +3,7 @@
 # ============================================================================================
 resource "azurerm_cdn_frontdoor_profile" "fd_profile" {
   name                = "mcs-fd-profile"
-  resource_group_name = azurerm_resource_group.website_rg.name
+  resource_group_name = data.azurerm_resource_group.website_rg.name
   sku_name            = "Standard_AzureFrontDoor"
 }
 

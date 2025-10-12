@@ -48,3 +48,13 @@ data "azurerm_dns_zone" "existing_zone" {
   name                = var.domain_name
   resource_group_name = var.dns_resource_group
 }
+
+# ================================================================================================
+# REMOVE AZURE-IMPOSED LOCKS ON DNS ZONE
+# ================================================================================================
+resource "azurerm_management_lock" "dns_zone_unlock" {
+  name       = var.domain_name
+  scope      = data.azurerm_dns_zone.existing_zone.id
+  lock_level = "None" # This effectively removes any CanNotDelete lock
+  notes      = "Removed Azure App Service domain protection lock for Terraform-managed DNS zone."
+}
