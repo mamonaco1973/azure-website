@@ -51,6 +51,6 @@ data "azurerm_client_config" "current" {}
 # The name must be unique within the Azure subscription.
 # --------------------------------------------------------------------------------------------
 resource "azurerm_resource_group" "website_rg" {
-  name     = "simple-website-rg"   
-  location = "Central US"
+  name     = var.web_resource_group
+  location = var.web_location
 }
