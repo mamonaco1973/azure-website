@@ -25,7 +25,7 @@ The included Bash scripts (`apply.sh`, `check_env.sh`, and `destroy.sh`) streaml
 * [Install AZ CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 
 * [Install Latest Terraform](https://developer.hashicorp.com/terraform/install)
 
-If this is your first time watching our content, we recommend starting with this video: [Azure + Terraform: Easy Setup](https://www.youtube.com/watch?v=wwi3kVgYNOk). It provides a step-by-step guide to properly configure Terraform, Packer, and the AZ CLI.
+If this is your first time watching our content, we recommend starting with this video: [Azure + Terraform: Easy Setup](https://www.youtube.com/watch?v=wwi3kVgYNOk). It provides a step-by-step guide to properly configure Terraform and the AZ CLI.
 
 ## Deployment Flow
 
