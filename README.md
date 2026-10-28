@@ -36,6 +36,7 @@ custom domains, and the validation TXT records, read back through the
 * [An Azure Account](https://portal.azure.com/)
 * [Install AZ CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 * [Install Terraform](https://developer.hashicorp.com/terraform/install)
+* [Install jq](https://jqlang.github.io/jq/download/)
 
 `check_env.sh` expects a service principal in `ARM_CLIENT_ID`,
 `ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID` and `ARM_TENANT_ID`. If this is
