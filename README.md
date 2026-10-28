@@ -1,114 +1,92 @@
-## Simple Website in Azure with Terraform & Front Door
+# Static Website on Azure: Storage + Front Door
 
-This project automates the deployment of a fully secure, production-ready **static website on Microsoft Azure**, leveraging **Terraform** for infrastructure-as-code and **Azure Front Door** for global HTTPS delivery. The site’s content is hosted in an **Azure Storage Account (Static Website)** and delivered worldwide through **Front Door**, using an **Azure-managed TLS certificate** to ensure fast and secure access from any location.
+A secure static website built with Terraform: the content lives in an
+**Azure Storage static website**, **Azure Front Door** serves it over HTTPS
+with Azure-managed certificates, and an **Azure DNS** zone points your domain
+and `www` at Front Door. The only manual step is registering the domain.
 
-The included Bash scripts (`apply.sh`, `check_env.sh`, and `destroy.sh`) streamline the complete lifecycle — from environment validation and provisioning to clean teardown — making this an ideal foundation for hosting static websites, documentation portals, or lightweight landing pages in Azure.
+![Under construction page](website.png)
 
-![website](website.png)
+| Piece | Where | Role |
+|---|---|---|
+| **Storage account** | `<domain>-website-rg`, Central US | Standard LRS; static website in `$web` with `index.html` and `404.html` |
+| **Front Door** | global | `mcs-fd-profile`, `Standard_AzureFrontDoor`; origin is the storage web endpoint over HTTPS; redirects HTTP to HTTPS; the default `*.azurefd.net` name is off |
+| **Custom domains** | Front Door | the root domain and `www`, each with an Azure-managed certificate |
+| **Azure DNS zone** | your zone's resource group | root alias `A` record and `www` `CNAME` to Front Door, plus `_dnsauth` TXT records that validate the custom domains |
 
-**Note:** The only manual step in this process is **domain registration**. This project assumes that you register your domain manually in the **Azure Portal** (via **Azure DNS**). Once the domain and DNS zone are created, Terraform takes over — automating the remainder of the deployment, including static website storage, Front Door configuration, and TLS certificate provisioning. In the accompanying video tutorial, we walk through these manual domain registration steps in the Azure Portal before transitioning into the Terraform automation.
+## Architecture
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="architecture-dark.svg">
+  <img alt="A browser looks up the domain in an Azure DNS zone, whose root alias A record and www CNAME point at an Azure Front Door endpoint, and fetches the site over HTTPS. Front Door serves managed certificates for both custom domains, validated with _dnsauth TXT records Terraform writes into the zone, and reads index.html and 404.html from a storage account's static website over HTTPS." src="architecture-light.svg">
+</picture>
 
-## Key Features
+Regenerate with `python3 make_diagram.py`.
 
-- **Manual Domain Setup**: Domain registration is handled in the Azure Portal using Azure DNS; all subsequent steps are fully automated through Terraform and scripts.  
-- **Infrastructure as Code (IaC)**: All Azure resources (Storage Account, Front Door, DNS records, etc.) are defined declaratively in Terraform for consistency and version control.  
-- **HTTPS Everywhere**: Automatically provisions and binds an Azure-managed TLS certificate through Front Door, ensuring secure access over HTTPS.  
-- **Secure Origin Access**: Uses **Front Door Origin Groups** and **Private Endpoints (optional)** to protect the Storage Account from direct public access, routing all traffic through Front Door.  
-- **Automated Lifecycle**: Companion shell scripts manage provisioning, validation, and destruction, simplifying deployment and teardown workflows.  
- 
+**`01-website/`** is the whole stack: `storage.tf` (the account, the static
+website and the two pages), `frontdoor.tf` (profile, endpoint, origin, route,
+custom domains, and the validation TXT records, read back through the
+`azapi` provider), and `dns.tf` (the root and `www` records).
 
 ## Prerequisites
 
-* [A Registered Domain](https://learn.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain)
+* [A registered domain](https://learn.microsoft.com/en-us/azure/app-service/manage-custom-dns-buy-domain)
+  with an Azure DNS zone. Registering it in the Azure portal creates the
+  zone; the video walks through this step.
 * [An Azure Account](https://portal.azure.com/)
-* [Install AZ CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli) 
-* [Install Latest Terraform](https://developer.hashicorp.com/terraform/install)
+* [Install AZ CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
+* [Install Terraform](https://developer.hashicorp.com/terraform/install)
 
-If this is your first time watching our content, we recommend starting with this video: [Azure + Terraform: Easy Setup](https://www.youtube.com/watch?v=wwi3kVgYNOk). It provides a step-by-step guide to properly configure Terraform and the AZ CLI.
+`check_env.sh` expects a service principal in `ARM_CLIENT_ID`,
+`ARM_CLIENT_SECRET`, `ARM_SUBSCRIPTION_ID` and `ARM_TENANT_ID`. If this is
+your first time watching our content, we recommend starting with this video:
+[Azure + Terraform: Easy Setup](https://www.youtube.com/watch?v=wwi3kVgYNOk).
 
-## Deployment Flow
+## Configure
 
-```mermaid
-flowchart LR
-    A[Register Domain in Azure DNS] --> B[Run Terraform Apply]
-    B --> C[Create Storage Account + Enable Static Website]
-    C --> D[Provision Front Door Profile + Custom Domains]
-    D --> E[Enable Azure-Managed TLS Certificate for HTTPS]
-    E --> F[Verify Website via Front Door Endpoint]
-```
+Set your domain and its DNS zone's resource group in
+`01-website/variables.tf`; the defaults are the author's:
 
-*Figure 1: End-to-end build process for the simple Azure website.*
+| Variable | Default |
+|---|---|
+| `domain_name` | `mikes-cloud-solutions.org` |
+| `dns_resource_group` | `mikes-solutions-org` |
+| `web_location` | `Central US` |
 
-## Download this Repository
+## Deploy
 
 ```bash
 git clone https://github.com/mamonaco1973/azure-website.git
 cd azure-website
+./apply.sh
 ```
 
-## Build the Code
+Front Door's certificate issuance takes the longest. `apply.sh` ends by
+running `validate.sh`, which checks `https://www.<domain>` once a minute
+until it returns HTTP 200.
 
-Run [check_env](check_env.sh) then run [apply](apply.sh).
+## Try it
+
+Open `https://your-domain` or `https://www.your-domain`: the "Under
+Construction" page from `01-website/index.html`. Any missing path returns
+`404.html`.
+
+## Troubleshooting
+
+| Symptom | Fix |
+|---|---|
+| `validate.sh` keeps waiting | The managed certificates are still being issued; Front Door can take a while to validate the `_dnsauth` records and deploy. |
+| The domain never validates | The DNS zone must be authoritative: the registrar's name servers must match the zone's NS records. |
+| `destroy.sh` fails deleting DNS records | New Azure domains can carry a **Delete** lock. Remove it in the DNS zone's **Locks** blade, then run `destroy.sh` again. |
+
+## Teardown
 
 ```bash
-~/azure-website$ ./apply.sh
-NOTE: Validating that required commands are found in your PATH.
-NOTE: aws is found in the current PATH.
-NOTE: terraform is found in the current PATH.
-NOTE: jq is found in the current PATH.
-NOTE: All required commands are available.
-NOTE: Checking AWS cli connection.
-NOTE: Successfully logged into AWS.
-NOTE: Building networking infrastructure.
-Initializing the backend...
-Initializing provider plugins...
-- Finding latest version of hashicorp/aws...
-- Finding latest version of hashicorp/random...
-- Installing hashicorp/aws v5.96.0...
-- Installed hashicorp/aws v5.96.0 (signed by HashiCorp)
-- Installing hashicorp/random v3.7.2...
-- Installed hashicorp/random v3.7.2 (signed by HashiCorp)
-Terraform has created a lock file .terraform.lock.hcl to record the provider
-selections it made above. Include this file in your version control repository
-so that Terraform can guarantee to make the same selections by default when
-you run "terraform init" in the future.
-
-Terraform has been successfully initialized!
+./destroy.sh     # destroys everything Terraform built; the domain and DNS zone stay
 ```
 
-## Build Results
+## Notes
 
-After a successful run of `apply.sh`, Terraform provisions a complete static website infrastructure on Azure. The following resources are created and configured automatically:
-
-| Component | Description |
-|------------|--------------|
-| **Storage Account (Static Website)** | Hosts all website content (e.g., `index.html`). Static website hosting is enabled on the `$web` container, with direct public access disabled. |
-| **Azure Front Door Profile** | Provides global HTTPS delivery and intelligent routing. It uses the Storage Account as the backend origin and automatically redirects all HTTP traffic to HTTPS. |
-| **Azure-Managed TLS Certificate** | Secures the Front Door custom domains with SSL/TLS encryption. Certificates are automatically issued and renewed by Azure. |
-| **Azure DNS Zone** | Hosts DNS records for the manually registered domain (created in the Azure Portal). Terraform creates the necessary A and TXT records for domain validation and routing. |
-
-Once the build completes, you can run the provided **`validate.sh`** script to confirm that the website is online and responding with an HTTP 200 status code:
-
-```bash
-./validate.sh
-```
-
-When the script reports `NOTE: URL is reachable`, your website is live and secured over HTTPS.  
-The default `index.html` displays an **“Under Construction”** page, which can later be replaced with your production site content.
-
-
-**Teardown:**  
-
-Before running the `destroy.sh` script, ensure that your domain is **not locked** against DNS record deletions.  
-By default, newly registered domains in Azure have a **delete lock** applied to prevent accidental removal of DNS entries.  
-
-You can remove this lock from the **Azure Portal** by navigating to your **DNS zone**, selecting the **Locks** blade, and deleting any existing **Delete** locks before proceeding.
-
-To remove all resources run:
-
-```bash
-./destroy.sh
-```
-This command safely destroys all Terraform-managed infrastructure while leaving your manually registered domain intact.
-
+- The storage account's static website endpoint is also public; Front Door
+  is the intended way in, but nothing blocks direct access to the
+  `*.web.core.windows.net` URL.
